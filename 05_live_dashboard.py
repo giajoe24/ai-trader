@@ -85,21 +85,40 @@ def send_discord_alert(webhook_url, message):
     except: pass
 
 # --- Data & AI Core ---
+@st.cache_data(ttl=60)
 def calculate_features(df):
-    df = df.copy()
-    if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
-    df.columns = [c.lower() for c in df.columns]
-    
-    df['sma_20'] = SMAIndicator(df['close'], 20).sma_indicator()
-    df['sma_50'] = SMAIndicator(df['close'], 50).sma_indicator()
-    df['sma_100'] = SMAIndicator(df['close'], 100).sma_indicator()
-    df['rsi'] = RSIIndicator(df['close'], 14).rsi()
-    bb = BollingerBands(df['close'], 20, 2)
-    df['bb_width'] = (bb.bollinger_hband() - bb.bollinger_lband()) / df['close']
-    df['atr'] = AverageTrueRange(df['high'], df['low'], df['close'], 14).average_true_range()
-    
-    df['return'] = df['close'].pct_change()
-    return df
+    try:
+        df = df.copy()
+        # Handle MultiIndex
+        if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
+        df.columns = [c.lower() for c in df.columns]
+        
+        # Min Requirements
+        if len(df) < 15: return df # Too short
+        
+        # Indicators
+        df['sma_20'] = SMAIndicator(df['close'], 20).sma_indicator()
+        df['sma_50'] = SMAIndicator(df['close'], 50).sma_indicator()
+        df['sma_100'] = SMAIndicator(df['close'], 100).sma_indicator()
+        
+        rsi = RSIIndicator(df['close'], 14).rsi()
+        df['rsi'] = rsi.fillna(50) # Neutral default
+        
+        bb = BollingerBands(df['close'], 20, 2)
+        df['bb_width'] = (bb.bollinger_hband() - bb.bollinger_lband()) / df['close']
+        
+        atr = AverageTrueRange(df['high'], df['low'], df['close'], 14).average_true_range()
+        df['atr'] = atr.fillna(df['close'] * 0.02) # Default 2%
+        
+        df['return'] = df['close'].pct_change()
+        
+        # Check integrity
+        # If SMA50 is NaN (not enough history), we backfill or use Close
+        if df['sma_50'].isnull().all(): df['sma_50'] = df['close']
+        
+        return df.fillna(method='bfill').fillna(method='ffill')
+    except:
+        return df
 
 @st.cache_data(ttl=60)
 def fetch_live_data(ticker):
