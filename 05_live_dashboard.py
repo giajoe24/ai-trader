@@ -31,11 +31,11 @@ except Exception as e:
     st.stop()
 
 # --- Configuration ---
-st.set_page_config(page_title="Infinite AI Trader (The Fortress)", layout="wide", page_icon="♾️")
+st.set_page_config(page_title="Infinite AI Trader (v2.0)", layout="wide", page_icon="🦅")
 
 # Hardcoded Keys (Fallback Only)
-FALLBACK_GEMINI_KEY = "AIzaSyBrhH_kjmuSFk2Gu__tkeBM7lMP6mXoXQ8"
-FALLBACK_DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1463190103248867465/lF0sIS7vRzmboaeHeVf_HAmpKqj_0amvQdeX7n08xJr3rf6zoplNuh5fWZX_7vrQi43m"
+FALLBACK_GEMINI_KEY = "" # User must provide key via Secrets or Sidebar
+FALLBACK_DISCORD_WEBHOOK = ""
 
 # --- Secrets Management (Cloud Ready) ---
 # Try loading from secrets first, then fallback
@@ -329,7 +329,16 @@ def render_analyst_report(portfolio):
         return
 
     df = pd.DataFrame(portfolio['history'])
-    df['date'] = pd.to_datetime(df['date'])
+    
+    # Fix Key Mismatch (date vs time)
+    if 'time' in df.columns: df['date'] = df['time'] # Normalize to date
+    if 'date' not in df.columns:
+        st.sidebar.caption("Data format error (Missing Date check logs).")
+        return
+
+    # Safe Convert
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
+    df = df.dropna(subset=['date'])
     
     # Filter Last 7 Days
     now = pd.Timestamp.now()
@@ -601,9 +610,12 @@ def run_portfolio_backtest(universe):
     # 1. Fetch & Prep ALL Data
     st.toast("⏳ Fetching Universe Data...")
     
-    vix = fetch_live_data("^VIX")
-    tnx = fetch_live_data("^TNX")
-    spy = fetch_live_data("SPY")
+    try:
+        vix = fetch_live_data("^VIX")
+        tnx = fetch_live_data("^TNX")
+        spy = fetch_live_data("SPY")
+    except:
+        return pd.DataFrame(), pd.DataFrame() # Safe exit
     
     if not vix.empty: 
         if isinstance(vix.columns, pd.MultiIndex): vix.columns = vix.columns.get_level_values(0)
@@ -647,7 +659,9 @@ def run_portfolio_backtest(universe):
             valid_tickers.append(t)
         progress.progress((i+1)/len(universe))
     
-    if not valid_tickers: return None, None
+    if not valid_tickers: 
+        st.error("Universe Data Error: No valid data found.")
+        return pd.DataFrame(), pd.DataFrame() # FIX: Safe Return
     
     # 2. Align Dates (Intersection)
     common_index = data_map[valid_tickers[0]].index
