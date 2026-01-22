@@ -856,7 +856,7 @@ def check_correlation(ticker, portfolio_holdings, data_map):
                     history.append({"date": date, "action": "BUY", "ticker": t, "price": p, "equity": cash, "reason": f"Score {s}"})
                     
     return pd.DataFrame(equity_curve), pd.DataFrame(history)
-st.title("♾️ Infinite AI Trader: Phase 13 (The Strategist)")
+st.title("🦅 Infinite AI Trader (v2.0: The Observatory)")
 
 # Sidebar - Global Situation Room
 st.sidebar.header("🌍 世界情勢 (Global Strategist)")
@@ -882,7 +882,11 @@ current_settings = load_settings()
 if any(t in UNIVERSE for t in ["TQQQ", "SOXL", "BTC-USD"]):
     st.sidebar.warning("⚠️ BERSERKER MODE ACTIVE (High Risk)")
     
-strat_status = consult_strategist(gemini_key)
+try:
+    with st.spinner("🌍 Connecting to Global HQ..."):
+        strat_status = consult_strategist(gemini_key)
+except:
+    strat_status = {"label": "OFFLINE", "color": "gray", "vix": 0, "tnx": 0, "advice": "Connection Failed", "regime": "ERROR"}
 st.sidebar.caption(f"Emperor Regime: **{strat_status.get('regime', 'NEUTRAL')}**")
 
 # DEFCON Display
