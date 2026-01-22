@@ -1284,8 +1284,15 @@ with tab_council:
     
     # 1. Voting Matrix (Summary of Multiple Stocks)
     st.markdown("##### 📊 全会一致状況 (Voting Matrix)")
-    # Show ALL tracked stocks (Universe + Watchlist)
-    matrix_targets = sorted(list(set(UNIVERSE + watchlist)))
+    # Show Watchlist by default (Fast), Checkbox for Full Universe (Slow)
+    scan_all = st.checkbox("全市場（The Observatory 50+）を表示する (※重いです)", value=False)
+    
+    if scan_all:
+        matrix_targets = sorted(list(set(UNIVERSE + watchlist)))
+    else:
+        matrix_targets = sorted(list(set(watchlist)))
+        if not matrix_targets:
+            st.info("監視中の銘柄はありません。上の「Scanner」から銘柄を探してください。")
     if matrix_targets:
         matrix_data = []
         for t in matrix_targets:
