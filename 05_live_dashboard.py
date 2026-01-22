@@ -49,12 +49,29 @@ try:
 except:
     DEFAULT_DISCORD_WEBHOOK = FALLBACK_DISCORD_WEBHOOK
 
+# --- The Observatory (Phase 31 Universe) ---
 UNIVERSE = [
-    "AAPL", "NVDA", "MSFT", "GOOGL", "AMZN", "TSLA", "NFLX", "META", 
-    "XOM", "JPM", "LLY", "GLD",
-    "TQQQ", "SOXL", "BTC-USD"
+    # 1. MAG 7 & Big Tech
+    "AAPL", "NVDA", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NFLX",
+    
+    # 2. Semiconductors (AI Chips)
+    "AMD", "AVGO", "TSM", "ARM", "SMH", "SOXL",
+    
+    # 3. Dow 30 & Defensive (The Kings)
+    "JPM", "V", "MA", "PG", "KO", "MCD", "DIS", "CAT", "BA", "XOM", "CVX",
+    
+    # 4. Growth & Innovation (The Prince)
+    "CRM", "PLTR", "SHOP", "SPOT", "UBER", "ABNB", "NET", "CRWD",
+    
+    # 5. Crypto & Leverage (The Berserker)
+    "BTC-USD", "ETH-USD", "MSTR", "COIN", "TQQQ",
+    
+    # 6. Global & Sector ETFs (The World)
+    "SPY", "QQQ", "IWM", "GLD", "TLT", # Indices/Bonds/Gold
+    "XLF", "XLE", "XLV", "XLI" # Financials, Energy, Healthcare, Industrial
 ]
-# Macro Tickers
+
+# Macro Indicators
 MACRO_TICKERS = {"VIX": "^VIX", "US10Y": "^TNX"}
 
 MODEL_DIR = "data/models/"
