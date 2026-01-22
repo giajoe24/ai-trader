@@ -1,0 +1,13 @@
+streamlit
+yfinance
+pandas
+numpy
+google-generativeai
+vaderSentiment
+ta
+scikit-learn
+plotly
+matplotlib
+seaborn
+Pillow
+requests
