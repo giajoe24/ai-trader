@@ -2,6 +2,7 @@
 import streamlit as st
 import os
 import sys
+import traceback
 
 # Catch-all for basic libraries
 try:
@@ -1508,14 +1509,6 @@ with tab_backtest:
                             st.dataframe(hist_df, use_container_width=True)
                 else:
                     st.error("宇宙のデータの取得に失敗しました。")
-import traceback
-
-# --- Tab 4: Logs ---
-with tab_logs:
-    st.dataframe(pd.DataFrame(portfolio['history']).iloc[::-1], use_container_width=True)
-
-# ... (End of file handling)
-
             except Exception as e:
                 st.error(f"Universe Error: {str(e)}")
                 st.code(traceback.format_exc()) # Show full error for debugging
