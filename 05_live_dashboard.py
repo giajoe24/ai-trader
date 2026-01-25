@@ -133,7 +133,7 @@ def calculate_features(df):
         # If SMA50 is NaN (not enough history), we backfill or use Close
         if df['sma_50'].isnull().all(): df['sma_50'] = df['close']
         
-        return df.fillna(method='bfill').fillna(method='ffill')
+        return df.bfill().ffill()
     except:
         return df
 
@@ -514,7 +514,7 @@ def run_backtest(ticker):
     if not vix.empty: df = df.join(vix, how='left')
     if not tnx.empty: df = df.join(tnx, how='left')
     
-    df = df.fillna(method='ffill').fillna(method='bfill')
+    df = df.ffill().bfill()
     
     # 2. Add Indicators
     df = calculate_features(df)
@@ -664,7 +664,7 @@ def run_portfolio_backtest(universe):
             if not vix.empty: df = df.join(vix, how='left')
             if not tnx.empty: df = df.join(tnx, how='left')
             if not spy.empty: df = df.join(spy, how='left')
-            df = df.fillna(method='ffill').fillna(method='bfill')
+            df = df.ffill().bfill()
             
             # Features
             df = calculate_features(df)
@@ -1099,6 +1099,7 @@ with tab_main:
                 added = []
                 progress = st.progress(0)
                 
+                fail_count = 0
                 # Strategist Check
                 if strat_status['level'] == 5:
                     st.error("🛑 軍師命令: 緊急事態宣言(DEFCON 5)につき、全購入禁止。")
@@ -1106,6 +1107,7 @@ with tab_main:
                     for i, t in enumerate(UNIVERSE):
                         res = convene_council(t)
                         if not res: 
+                            fail_count += 1
                             progress.progress((i+1)/len(UNIVERSE))
                             continue
                             
@@ -1140,6 +1142,9 @@ with tab_main:
                         if enable_sound:
                              # Simple chime sound
                              st.audio("https://raw.githubusercontent.com/toshimaru/f5-tts-demo/main/tests/assets/audio/success.mp3", autoplay=True)
+                    
+                    if fail_count > 0:
+                        st.caption(f"⚠️ {fail_count} 銘柄はデータ取得エラーのためスキップされました。")
 
     # Watchlist Loop
     watchlist = st.session_state.get('watchlist', [])
