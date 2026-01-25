@@ -862,7 +862,7 @@ def check_correlation(ticker, portfolio_holdings, data_map):
                     history.append({"date": date, "action": "BUY", "ticker": t, "price": p, "equity": cash, "reason": f"Score {s}"})
                     
     return pd.DataFrame(equity_curve), pd.DataFrame(history)
-st.title("🦅 Infinite AI Trader (v2.0: The Observatory)")
+st.title("🦅 Infinite AI Trader (v2.1: Rescue Mode)")
 
 # Sidebar - Global Situation Room
 st.sidebar.header("🌍 世界情勢 (Global Strategist)")
@@ -887,12 +887,16 @@ current_settings = load_settings()
 
 if any(t in UNIVERSE for t in ["TQQQ", "SOXL", "BTC-USD"]):
     st.sidebar.warning("⚠️ BERSERKER MODE ACTIVE (High Risk)")
-    
-try:
-    with st.spinner("🌍 Connecting to Global HQ..."):
-        strat_status = consult_strategist(gemini_key)
-except:
-    strat_status = {"label": "OFFLINE", "color": "gray", "vix": 0, "tnx": 0, "advice": "Connection Failed", "regime": "ERROR"}
+
+# --- RESCUE MODE: Temporarily Disable Live Strategist to Fix Freeze ---
+# try:
+#     with st.spinner("🌍 Connecting to Global HQ..."):
+#         strat_status = consult_strategist(gemini_key)
+# except:
+#     strat_status = {"label": "OFFLINE", "color": "gray", "vix": 0, "tnx": 0, "advice": "Connection Failed", "regime": "ERROR"}
+
+# Static Fallback to ensure startup
+strat_status = {"label": "RESCUE MODE", "color": "#FFA500", "vix": 20.0, "tnx": 4.0, "advice": "System Recovery Active.", "regime": "NEUTRAL"}
 st.sidebar.caption(f"Emperor Regime: **{strat_status.get('regime', 'NEUTRAL')}**")
 
 # DEFCON Display
