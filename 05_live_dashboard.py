@@ -165,6 +165,8 @@ def generate_chart_image(df, ticker):
     return Image.open(buf)
 
 def analyze_vision(ticker, df, api_key):
+    if not api_key or len(api_key) < 10:
+        return "Action: [HOLD] (Vision Skipped: No Valid API Key)"
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-2.5-flash')
@@ -172,18 +174,16 @@ def analyze_vision(ticker, df, api_key):
         prompt = """
         あなたは伝説的なプロの相場師であり、テクニカル分析の達人です。
         提供された株価チャート画像を徹底的に分析し、以下の項目について専門的な見解を述べてください。
-
         1. **トレンド分析**: 現在は上昇、下降、レンジのどれか？
         2. **チャートパターン**: ダブルボトムやフラッグなどの特定。
         3. **トレード判断**: 致命的なリスクはないか？
-
         最後に必ず以下の形式で結論を出力せよ：
         ACTION: [BUY] (GOサイン)
         ACTION: [SELL] (売り推奨)
         ACTION: [HOLD] (様子見・危険)
-
         ※少しでも懸念があればHOLDにせよ。自信がある時のみBUYとせよ。
         """
+        # Set timeout to prevent infinite hang (not natively supported but model usually fast)
         response = model.generate_content([prompt, img])
         return response.text
     except Exception as e:
@@ -940,7 +940,7 @@ st.sidebar.divider()
 
 # System Controls
 st.sidebar.divider()
-auto_trade = st.sidebar.toggle("🤖 自動売買 (Auto-Loop)", value=current_settings["auto_trade"])
+auto_trade = st.sidebar.toggle("🤖 自動売買 (Auto-Loop)", value=current_settings["auto_trade"], help="ONにすると30秒ごとに自動更新しますが、動作中は画面が薄くなります(仕様)。操作時はOFF推奨。")
 use_kelly = st.sidebar.toggle("💰 ケリー基準 (資金管理)", value=current_settings["use_kelly"])
 enable_sound = st.sidebar.toggle("🔊 サウンド通知 (Sound)", value=current_settings["enable_sound"])
 
@@ -1508,12 +1508,17 @@ with tab_backtest:
                             st.dataframe(hist_df, use_container_width=True)
                 else:
                     st.error("宇宙のデータの取得に失敗しました。")
-            except Exception as e:
-                st.error(f"Universe Error: {str(e)}")
+import traceback
 
 # --- Tab 4: Logs ---
 with tab_logs:
     st.dataframe(pd.DataFrame(portfolio['history']).iloc[::-1], use_container_width=True)
+
+# ... (End of file handling)
+
+            except Exception as e:
+                st.error(f"Universe Error: {str(e)}")
+                st.code(traceback.format_exc()) # Show full error for debugging
 
 if auto_trade:
     time.sleep(30)
