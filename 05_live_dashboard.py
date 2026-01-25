@@ -190,13 +190,19 @@ def analyze_vision(ticker, df, api_key):
         return f"Vision Error: {str(e)}"
 
 
+@st.cache_data(ttl=600, show_spinner=False)
 def consult_strategist(api_key):
     """🌍 The Strategist: Macro & News AI (Phase 25 Masterpiece)"""
     try:
-        # 1. Macro Data
-        spy_df = fetch_live_data("SPY")
-        vix_df = fetch_live_data("^VIX")
-        tnx_df = fetch_live_data("^TNX")
+        # 1. Macro Data (Fail Fast)
+        try: spy_df = fetch_live_data("SPY")
+        except: spy_df = pd.DataFrame()
+        
+        try: vix_df = fetch_live_data("^VIX") 
+        except: vix_df = pd.DataFrame()
+        
+        try: tnx_df = fetch_live_data("^TNX")
+        except: tnx_df = pd.DataFrame()
         
         # 2. News Data (New)
         news_text = ""
@@ -890,25 +896,29 @@ except:
 st.sidebar.caption(f"Emperor Regime: **{strat_status.get('regime', 'NEUTRAL')}**")
 
 # DEFCON Display
-defcon_color = strat_status['color']
-st.sidebar.markdown(f"""
-<div style="padding: 10px; border-radius: 5px; background-color: {defcon_color}; color: white; text-align: center; font-weight: bold;">
-    {strat_status['label']}
-</div>
-""", unsafe_allow_html=True)
-st.sidebar.info(f"💡 {strat_status['advice']}")
+try:
+    # DEFCON Display
+    defcon_color = strat_status.get('color', 'gray')
+    st.sidebar.markdown(f"""
+    <div style="padding: 10px; border-radius: 5px; background-color: {defcon_color}; color: white; text-align: center; font-weight: bold;">
+        {strat_status.get('label', 'OFFLINE')}
+    </div>
+    """, unsafe_allow_html=True)
+    st.sidebar.info(f"💡 {strat_status.get('advice', 'Waiting for Strategy...')}")
 
-c1, c2 = st.sidebar.columns(2)
-c1.metric("恐怖指数(VIX)", f"{strat_status['vix']:.2f}")
-c2.metric("金利(US10Y)", f"{strat_status['tnx']:.2f}%")
+    c1, c2 = st.sidebar.columns(2)
+    c1.metric("恐怖指数(VIX)", f"{strat_status.get('vix', 0):.2f}")
+    c2.metric("金利(US10Y)", f"{strat_status.get('tnx', 0):.2f}%")
 
-sentiment = strat_status.get('news_sentiment', 'NEUTRAL')
-if sentiment == "POSITIVE":
-    st.sidebar.markdown("##### 📰 News: :green[POSITIVE]")
-elif sentiment == "NEGATIVE":
-    st.sidebar.markdown("##### 📰 News: :red[NEGATIVE]")
-else:
-    st.sidebar.markdown("##### 📰 News: :gray[NEUTRAL]")
+    sentiment = strat_status.get('news_sentiment', 'NEUTRAL')
+    if sentiment == "POSITIVE":
+        st.sidebar.markdown("##### 📰 News: :green[POSITIVE]")
+    elif sentiment == "NEGATIVE":
+        st.sidebar.markdown("##### 📰 News: :red[NEGATIVE]")
+    else:
+        st.sidebar.markdown("##### 📰 News: :gray[NEUTRAL]")
+except:
+    st.sidebar.error("Strategist UI Error")
 
 if 'regime' in strat_status and strat_status['regime'] == 'BEAR':
     st.sidebar.error("🐻 BEAR MARKET DETECTED")
