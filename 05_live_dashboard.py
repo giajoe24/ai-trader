@@ -195,22 +195,15 @@ def analyze_vision(ticker, df, api_key):
 def consult_strategist(api_key):
     """🌍 The Strategist: Macro & News AI (Phase 25 Masterpiece)"""
     try:
-        # 1. Macro Data (Batch Fetch - 3x Faster)
-        tickers = "SPY ^VIX ^TNX"
-        data = yf.download(tickers, period="1y", interval="1d", group_by='ticker', progress=False)
+        # 1. Macro Data (Reverted to Safe Individual Fetch for Stability)
+        try: spy_df = fetch_live_data("SPY")
+        except: spy_df = pd.DataFrame()
         
-        # Safe Extract
-        def get_df(t):
-            try:
-                d = data[t]
-                if isinstance(d.columns, pd.MultiIndex): d.columns = d.columns.get_level_values(0)
-                d.columns = [c.lower() for c in d.columns]
-                return d
-            except: return pd.DataFrame()
-
-        spy_df = get_df("SPY")
-        vix_df = get_df("^VIX")
-        tnx_df = get_df("^TNX")
+        try: vix_df = fetch_live_data("^VIX") 
+        except: vix_df = pd.DataFrame()
+        
+        try: tnx_df = fetch_live_data("^TNX")
+        except: tnx_df = pd.DataFrame()
         
         # 2. News Data (New)
         news_text = ""
