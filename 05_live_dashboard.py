@@ -194,7 +194,6 @@ def analyze_vision(ticker, df, api_key):
 def consult_strategist(api_key):
     """🌍 The Strategist: Macro & News AI (Phase 25 Masterpiece)"""
     try:
-    try:
         # 1. Macro Data (Batch Fetch - 3x Faster)
         tickers = "SPY ^VIX ^TNX"
         data = yf.download(tickers, period="1y", interval="1d", group_by='ticker', progress=False)
