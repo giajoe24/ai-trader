@@ -214,11 +214,20 @@ def consult_strategist(api_key):
         except: news_text = "No News Available."
         
         # Macro Values
-        # Note: get_df converts columns to lowercase
-        vix = vix_df['close'].iloc[-1] if not vix_df.empty else 20.0
-        if isinstance(vix, pd.Series): vix = vix.iloc[0]
-        tnx = tnx_df['close'].iloc[-1] if not tnx_df.empty else 4.0
-        if isinstance(tnx, pd.Series): tnx = tnx.iloc[0]
+        # Note: fetch_live_data returns TitleCase, so we must normalize here
+        vix = 20.0
+        if not vix_df.empty:
+            if isinstance(vix_df.columns, pd.MultiIndex): vix_df.columns = vix_df.columns.get_level_values(0)
+            vix_df.columns = [c.lower() for c in vix_df.columns]
+            vix = vix_df['close'].iloc[-1]
+            if isinstance(vix, pd.Series): vix = vix.iloc[0]
+            
+        tnx = 4.0
+        if not tnx_df.empty:
+            if isinstance(tnx_df.columns, pd.MultiIndex): tnx_df.columns = tnx_df.columns.get_level_values(0)
+            tnx_df.columns = [c.lower() for c in tnx_df.columns]
+            tnx = tnx_df['close'].iloc[-1]
+            if isinstance(tnx, pd.Series): tnx = tnx.iloc[0]
         
         spy_price = 0
         spy_sma150 = 0
