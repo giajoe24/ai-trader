@@ -398,7 +398,7 @@ def vote_aggressor(row):
     comment = "行けぇぇぇ！(GO!)" if vote == 1 else "退屈すぎる..." if vote == 0 else "逃げろ！(DUMP)"
     return vote, comment, ", ".join(reason)
 
-def vote_guardian(row):
+def vote_guardian(row, strict=True):
     """🐢 The Guardian"""
     reason = []
     score = 0
@@ -406,7 +406,7 @@ def vote_guardian(row):
         score += 1
         reason.append("長期トレンド継続(SMA100)")
     else:
-        score -= 10 
+        score -= 10 if strict else 1 # RELAXED: Only -1 penalty if not strict
         reason.append("トレンド崩壊(Downtrend)")
     if row['rsi'] < 40 and 'sma_100' in row and row['close'] > row['sma_100']:
         score += 1
@@ -441,7 +441,7 @@ def vote_quant(row, ticker):
         
     return vote, comment, ", ".join(reason)
 
-def convene_council(ticker):
+def convene_council(ticker, strict=True):
     data = fetch_live_data(ticker)
     if data.empty: return None
     
@@ -454,7 +454,7 @@ def convene_council(ticker):
     latest = data.iloc[-1]
     
     v1, c1, r1 = vote_aggressor(latest)
-    v2, c2, r2 = vote_guardian(latest)
+    v2, c2, r2 = vote_guardian(latest, strict=strict)
     v3, c3, r3 = vote_quant(latest, ticker)
     
     total_vote = v1 + v2 + v3
@@ -949,6 +949,9 @@ st.sidebar.divider()
 
 # System Controls
 st.sidebar.divider()
+risk_mode = st.sidebar.select_slider("リスク許容度 (Risk Mode)", options=["Normal (安全第一)", "Aggressive (積極投資)"], value="Normal (安全第一)")
+is_aggressive = risk_mode == "Aggressive (積極投資)"
+
 auto_trade = st.sidebar.toggle("🤖 自動売買 (Auto-Loop)", value=current_settings["auto_trade"], help="ONにすると30秒ごとに自動更新しますが、動作中は画面が薄くなります(仕様)。操作時はOFF推奨。")
 use_kelly = st.sidebar.toggle("💰 ケリー基準 (資金管理)", value=current_settings["use_kelly"])
 enable_sound = st.sidebar.toggle("🔊 サウンド通知 (Sound)", value=current_settings["enable_sound"])
@@ -1114,7 +1117,8 @@ with tab_main:
                     st.error("🛑 軍師命令: 緊急事態宣言(DEFCON 5)につき、全購入禁止。")
                 else:
                     for i, t in enumerate(UNIVERSE):
-                        res = convene_council(t)
+                        # Pass Risk Mode (Strict if Normal, Relaxed if Aggressive)
+                        res = convene_council(t, strict=not is_aggressive)
                         if not res: 
                             fail_count += 1
                             progress.progress((i+1)/len(UNIVERSE))
@@ -1339,7 +1343,7 @@ with tab_council:
         for t in matrix_targets:
             # We use a lightweight check if possible, but here we just run logic
             # To speed up, we might cache or just run it (it's fast enough for <10 stocks)
-            r = convene_council(t)
+            r = convene_council(t, strict=not is_aggressive)
             if r:
                 # Emojify votes
                 def get_icon(v): return "✅ YES" if v==1 else "❌ NO" if v==-1 else "➖ PASS"
@@ -1364,7 +1368,7 @@ with tab_council:
     target_t = st.selectbox("議題 (銘柄)", all_options)
     
     if target_t:
-        res = convene_council(target_t)
+        res = convene_council(target_t, strict=not is_aggressive)
         if res:
              c1, c2, c3 = st.columns(3)
              
